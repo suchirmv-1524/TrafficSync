@@ -64,10 +64,4 @@ Traffic density is set to high by default, and the scene simulates the maximum n
 - Node.js for local development.
 - Three.js for 3D scene rendering.
 
----
-
-## Authors
-- Suchir M Velpanur
-Github : @suchirmv-1524
-
 Enjoy simulating and optimizing traffic flow in a dynamic 3D environment!
