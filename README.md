@@ -1,6 +1,6 @@
 # Traffic Simulation with Real-Time Traffic Density Tracking and Congestion Control
 
-![Traffic Simulation Project Banner](./public/assets/ARVR-Project.png)
+![Traffic Simulation Project Banner](./public/assets/TrafficSync_demo.png)
 
 This project simulates a 4-way intersection where cars are loaded based on real-time traffic density at a busy road junction in Bangalore. 
 
