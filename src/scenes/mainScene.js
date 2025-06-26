@@ -21,7 +21,7 @@ import html2canvas from 'html2canvas';
 const scene = new THREE.Scene();
 initFog(scene);
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 5, 1200);
 camera.position.set(30, 75, 350);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -90,9 +90,29 @@ for (let i = 0; i < 10; i++) {
 }
 
 
-let traffic_level = 'High';
+
+const isLocalhost = window.location.hostname === "localhost" || 
+                    window.location.hostname === "127.0.0.1" ||
+                    window.location.hostname.includes("192.168.");
 
 const loadGoogleMapsScript = () => {
+    if (!isLocalhost) {
+        console.log("Not running on localhost - skipping Google Maps integration");
+        updateTrafficDisplayPlaceholder("Using default high traffic density for deployed environment");
+        loadCars("high");
+        return;
+    }
+
+    // Insert a container in the HTML to display traffic density information
+    document.body.insertAdjacentHTML(
+        "beforeend",
+        `
+        <div id="traffic-info" style="position: absolute; top: 20px; right: 30px; background: white; padding: 10px; border-radius: 5px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); font-size: 14px;">
+            <p>Initializing traffic density analysis...</p>
+        </div>
+        <div id="map" style="height: 500px; width: 100%;"></div>
+    `
+    );
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&callback=initMap&v=weekly`;
     script.async = true;
@@ -100,7 +120,7 @@ const loadGoogleMapsScript = () => {
     script.onerror = function() {
         console.error("Error loading Google Maps script, setting traffic level to high by default.");
         updateTrafficDisplayPlaceholder("Google Maps API not available, defaulting to high traffic.");
-        loadCars("High");
+        loadCars("high");
         console.log("Traffic is high, triggering alternative operations...");
     };
     document.head.appendChild(script);
@@ -112,7 +132,7 @@ window.initMap = function () {
     if (typeof google === 'undefined' || !google.maps) {
         console.error("Google Maps API not available, setting traffic level to high by default.");
         updateTrafficDisplayPlaceholder("Google Maps API not available, defaulting to high traffic.");
-        loadCars("High");
+        loadCars("high");
         console.log("Traffic is high, triggering alternative operations...");
         return;
     }
@@ -134,9 +154,9 @@ window.initMap = function () {
         .then((trafficLevel) => {
             console.log(`Traffic density calculated: ${trafficLevel}`);
             loadCars(trafficLevel);
-            if (trafficLevel === "Low") {
+            if (trafficLevel === "low") {
                 console.log("Traffic is low, performing specific operations...");
-            } else if (trafficLevel === "Medium") {
+            } else if (trafficLevel === "medium") {
                 console.log("Traffic is medium, executing other logic...");
             } else {
                 console.log("Traffic is high, triggering alternative operations...");
@@ -240,11 +260,11 @@ function analyzeTrafficColors(canvas) {
 }
 
 function updateTrafficDisplay({ redDensity, orangeDensity, yellowDensity, greenDensity }) {
-    let calc_traffic_level = 'High';
+    let calc_traffic_level = 'high';
     if (greenDensity > 75) {
-        calc_traffic_level = 'Low';
+        calc_traffic_level = 'low';
     } else if (redDensity < 40) {
-        calc_traffic_level = 'Medium';
+        calc_traffic_level = 'medium';
     }
 
     const trafficInfo = document.getElementById("traffic-info");
@@ -291,48 +311,59 @@ function updateTrafficDisplayPlaceholder(message) {
     }
 }
 
-// Insert a container in the HTML to display traffic density information
-document.body.insertAdjacentHTML(
-    "beforeend",
-    `
-    <div id="traffic-info" style="position: absolute; top: 20px; right: 30px; background: white; padding: 10px; border-radius: 5px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); font-size: 14px;">
-        <p>Initializing traffic density analysis...</p>
-    </div>
-`
-);
 
 
 
+
+
+const limit=599;
 function loadCars(traffic_level){
 Promise.all([
-    loadModel(scene,'Mustang', '/assets/shelby/scene.gltf', 450, 0, 60, 12,traffic_level),
-    loadModel(scene,'Focus', '/assets/focus/scene.gltf', 500, 0, 30, 12,traffic_level),
-    loadModel(scene,'Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 45, 12,traffic_level),
-    loadModel(scene,'Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 30, 8,traffic_level),
+    document.body.insertAdjacentHTML(
+        "beforeend",
+        `
+        <div id="loading-info" style="position: absolute; top: 20px; left: 30px; background: white; padding: 10px; border-radius: 5px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); font-size: 14px;">
+            <p><b>Loading Cars....</b></p>
+        </div>
+    `
+    ),
+    loadRoad(scene),
+    // loadModel(scene,'Mustang', '/assets/shelby/scene.gltf', 450, 0, 60, 12,traffic_level),
+    // loadModel(scene,'Focus', '/assets/focus/scene.gltf', 500, 0, 30, 12,traffic_level),
+    // loadModel(scene,'Boxster', '/assets/boxster/scene.gltf', 1.35, 3.9, 45, 12,traffic_level),
+    // loadModel(scene,'Porsche', '/assets/porsche/scene.gltf', 5, 0.55, 30, 8,traffic_level),
+    loadModel(scene, 'Mustang', '/assets/focus/scene_draco.gltf', 500, 0, 60, 12, traffic_level),
+    loadModel(scene, 'Focus', '/assets/focus/scene_draco.gltf', 500, 0, 30, 12, traffic_level),
+    loadModel(scene, 'Boxster', '/assets/boxster/scene_draco.gltf', 1.35, 3.9, 45, 12, traffic_level),
+    loadModel(scene, 'Porsche', '/assets/porsche/scene_draco.gltf', 5, 0.55, 30, 8, traffic_level)
     // loadModel(scene,'Civic', '/assets/civic/scene.gltf', 500, 0, 75, 12)
 ]).then(() => {
-    console.log('All models loaded:', cars);
-    if(traffic_level==='Medium' || traffic_level==='High'){
-        scene.remove(cars['Focus'][8]);
+    const loadingInfo = document.getElementById('loading-info');
+    if (loadingInfo) {
+        loadingInfo.remove();
     }
-    if(traffic_level==='High'){scene.remove(cars['Focus'][11]);}
+    console.log('All models loaded:', cars);
+    // if(traffic_level==='medium' || traffic_level==='high'){
+    //     scene.remove(cars['Focus'][8]);
+    // }
+    // if(traffic_level==='high'){scene.remove(cars['Focus'][11]);}
 
-
+    let count=0;
     setInterval(() => {
         // Define the cars you want to include in the loop
         let carModels = [];
-        if (traffic_level==='Low'){
+        if (traffic_level==='low'){
             carModels = [
-                [cars['Focus'][1]], // Include Focus car at index 5
-                [cars['Boxster'][1]], // Include Boxster car at index 5
+                [cars['Focus'][1]], 
+                [cars['Boxster'][1]], 
                 [cars['Mustang'][1]],
                 [cars['Porsche'][1]],
             ];
         }
-        else if(traffic_level==='Medium'){
+        else if(traffic_level==='medium'){
             carModels = [
-                [cars['Focus'][5]], // Include Focus car at index 5
-                [cars['Boxster'][5]], // Include Boxster car at index 5
+                [cars['Focus'][5]],
+                [cars['Boxster'][5]], 
                 [cars['Focus'][1]],
                 [cars['Boxster'][1]],
                 [cars['Porsche'][1]],
@@ -341,10 +372,10 @@ Promise.all([
                 [cars['Mustang'][5]],
             ];
         }
-        else if(traffic_level==='High'){
+        else if(traffic_level==='high'){
             carModels = [
-                [cars['Focus'][5]], // Include Focus car at index 5
-                [cars['Boxster'][5]], // Include Boxster car at index 5
+                [cars['Focus'][5]], 
+                [cars['Boxster'][5]], 
                 [cars['Focus'][1]],
                 [cars['Boxster'][1]],
                 [cars['Focus'][9]],
@@ -357,7 +388,6 @@ Promise.all([
                 [cars['Mustang'][9]],
             ];
         }
-
         // Loop over each car array and each car within those arrays
         carModels.forEach(carArray => {
             carArray.forEach(car => {
@@ -379,7 +409,7 @@ Promise.all([
                     if(position===1)
                     {
                         moveCarRight(car);
-                        console.log('right');
+                        // console.log('right');
                         occ_pos = occ_pos.filter(pos => pos[0] !== lane || pos[1] !== position);
                     }
                     else if ((position !== 1) && !occ_pos.some(pos => pos[0] === lane && pos[1] === position - 1)) {
@@ -453,13 +483,15 @@ Promise.all([
                 // console.log(`Position: ${position}, Lane: ${lane}`);
                 // console.log(occ_pos);
 
-                // Remove the car from the scene if it goes beyond z = -450
+
                 
-                if (car.position.z < -400 || car.position.x > 400 || car.position.x < -400) {
-                    let randomInt=THREE.MathUtils.randInt(0,2)
-                    car.position.z=450;
-                    car.position.x=30+randomInt *15
+                if (car.position.z < -limit || car.position.x > limit || car.position.x < -limit) {
+                    // let randomInt=THREE.MathUtils.randInt(0,2)
+                    car.position.z=((limit+50)%30)*30;
+                    car.position.x=30+count*15
                     car.rotation.y=Math.PI;
+                    count++;
+                    count=count%3;
                     // scene.remove(car);
                 }
             });
@@ -467,7 +499,7 @@ Promise.all([
     }, 250);
     setInterval(() => {
         let carModels = [];
-        if (traffic_level==='Low'){
+        if (traffic_level==='low'){
             carModels = [
                 [cars['Focus'][0]], // Include Focus car at index 5
                 [cars['Boxster'][0]], // Include Boxster car at index 5
@@ -475,7 +507,7 @@ Promise.all([
                 [cars['Porsche'][0]],
             ];
         }
-        else if(traffic_level==='Medium'){
+        else if(traffic_level==='medium'){
             carModels = [
                 [cars['Focus'][4]],
                 [cars['Boxster'][4]],
@@ -487,13 +519,13 @@ Promise.all([
                 [cars['Mustang'][4]],
             ];
         }
-        else if(traffic_level==='High'){
+        else if(traffic_level==='high'){
             carModels = [
                 [cars['Focus'][4]],
                 [cars['Boxster'][4]],
                 [cars['Focus'][0]],
                 [cars['Boxster'][0]],
-                // [cars['Focus'][8]],
+                [cars['Focus'][8]],
                 [cars['Boxster'][8]],
                 [cars['Porsche'][0]],
                 [cars['Porsche'][4]],
@@ -517,11 +549,11 @@ Promise.all([
                 }
                 if (position >= 0) {
                     // Insert debugging logs
-                    console.log(`Processing car at lane: ${lane}, position: ${position}`);
+                    // console.log(`Processing car at lane: ${lane}, position: ${position}`);
     
                     if (!occ_pos1.some(pos => pos[0] === lane && pos[1] === position)) {
                         occ_pos1.push([lane, position]);
-                        console.log(`Added to occ_pos1: lane ${lane}, position ${position}`);
+                        // console.log(`Added to occ_pos1: lane ${lane}, position ${position}`);
                     }
     
                     if (position === 0 && light === 'green') {
@@ -564,29 +596,31 @@ Promise.all([
                     }
                 }
     
-                console.log(`Final occ_pos1:`, occ_pos1);
+                // console.log(`Final occ_pos1:`, occ_pos1);
                 
-                if (car.position.z > 410|| car.position.x > 410 || car.position.x < -410) {
-                    let randomInt=THREE.MathUtils.randInt(0,2)
-                    car.position.z=-450;
-                    car.position.x=-(30+randomInt *15)
+                if (car.position.z > limit|| car.position.x > limit || car.position.x < -limit) {
+                    // let randomInt=THREE.MathUtils.randInt(0,2)
+                    car.position.z=-((limit+50)%30+count)*30;
+                    car.position.x=-(30+count *15)
                     car.rotation.y=0;
                     // scene.remove(car);
+                    count++;
+                    count=count%3;
                 }
             });
         });
     }, 250);
     setInterval(() => {
         let carModels = [];
-        if (traffic_level==='Low'){
+        if (traffic_level==='low'){
             carModels = [
-                [cars['Focus'][2]], // Include Focus car at index 5
-                [cars['Boxster'][2]], // Include Boxster car at index 5
+                [cars['Focus'][2]], 
+                [cars['Boxster'][2]],
                 [cars['Mustang'][2]],
                 [cars['Porsche'][2]],
             ];
         }
-        else if(traffic_level==='Medium'){
+        else if(traffic_level==='medium'){
             carModels = [
                 [cars['Focus'][6]],
                 [cars['Boxster'][6]],
@@ -598,7 +632,7 @@ Promise.all([
                 [cars['Mustang'][6]],
             ];
         }
-        else if(traffic_level==='High'){
+        else if(traffic_level==='high'){
             carModels = [
                 [cars['Focus'][6]],
                 [cars['Boxster'][6]],
@@ -628,11 +662,11 @@ Promise.all([
                 }
                 if (position >= 0) {
                     // Insert debugging logs
-                    console.log(`Processing car at lane: ${lane}, position: ${position}`);
+                    // console.log(`Processing car at lane: ${lane}, position: ${position}`);
     
                     if (!occ_pos2.some(pos => pos[0] === lane && pos[1] === position)) {
                         occ_pos2.push([lane, position]);
-                        console.log(`Added to occ_pos2: lane ${lane}, position ${position}`);
+                        // console.log(`Added to occ_pos2: lane ${lane}, position ${position}`);
                     }
     
                     if (position === 0 && light === 'green') {
@@ -675,29 +709,31 @@ Promise.all([
                     }
                 }
     
-                console.log(`Final occ_pos2:`, occ_pos2);
+                // console.log(`Final occ_pos2:`, occ_pos2); 
                 
-                if (car.position.x > 400 || car.position.z > 400 || car.position.z < -400) {
-                    let randomInt=THREE.MathUtils.randInt(0,2)
-                    car.position.x=-450;
-                    car.position.z=30+randomInt *15
+                if (car.position.x > limit || car.position.z > limit || car.position.z < -limit) {
+                    // let randomInt=THREE.MathUtils.randInt(0,2)
+                    car.position.x=-((limit+50)%30+count)*30;
+                    car.position.z=30+count *15
                     car.rotation.y=Math.PI/2;
                     // scene.remove(car);
+                    count++;
+                    count=count%3;
                 }
             });
         });
     }, 250);
     setInterval(() => {
         let carModels = [];
-        if (traffic_level==='Low'){
+        if (traffic_level==='low'){
             carModels = [
-                [cars['Focus'][3]], // Include Focus car at index 5
-                [cars['Boxster'][3]], // Include Boxster car at index 5
+                [cars['Focus'][3]], 
+                [cars['Boxster'][3]], 
                 [cars['Mustang'][3]],
                 [cars['Porsche'][3]],
             ];
         }
-        else if(traffic_level==='Medium'){
+        else if(traffic_level==='medium'){
             carModels = [
                 [cars['Focus'][7]],
                 [cars['Boxster'][7]],
@@ -709,13 +745,13 @@ Promise.all([
                 [cars['Mustang'][7]],
             ];
         }
-        else if(traffic_level==='High'){
+        else if(traffic_level==='high'){
             carModels = [
                 [cars['Focus'][7]],
                 [cars['Boxster'][7]],
                 [cars['Focus'][3]],
                 [cars['Boxster'][3]],
-                // [cars['Focus'][11]],
+                [cars['Focus'][11]],
                 [cars['Boxster'][11]],
                 [cars['Porsche'][3]],
                 [cars['Porsche'][7]],
@@ -739,11 +775,11 @@ Promise.all([
                 }
                 if (position >= 0) {
                     // Insert debugging logs
-                    console.log(`Processing car at lane: ${lane}, position: ${position}`);
+                    // console.log(`Processing car at lane: ${lane}, position: ${position}`);
     
                     if (!occ_pos3.some(pos => pos[0] === lane && pos[1] === position)) {
                         occ_pos3.push([lane, position]);
-                        console.log(`Added to occ_pos3: lane ${lane}, position ${position}`);
+                        // console.log(`Added to occ_pos3: lane ${lane}, position ${position}`);
                     }
     
                     if (position === 0 && light === 'green') {
@@ -786,14 +822,16 @@ Promise.all([
                     }
                 }
     
-                console.log(`Final occ_pos3:`, occ_pos3);
+                // console.log(`Final occ_pos3:`, occ_pos3);
                 
-                if (car.position.x < -400 || car.position.z > 400 || car.position.z < -400) {
-                    let randomInt=THREE.MathUtils.randInt(0,2)
-                    car.position.x=450;
-                    car.position.z=-(30+randomInt *15)
+                if (car.position.x < -limit || car.position.z > limit || car.position.z < -limit) {
+                    // let randomInt=THREE.MathUtils.randInt(0,2)
+                    car.position.x=((limit+50)%30+count)*30;
+                    car.position.z=-(30+count*15)
                     car.rotation.y=-Math.PI/2;
                     // scene.remove(car);
+                    count++;
+                    count=count%3;
                 }
             });
         });
@@ -804,7 +842,7 @@ Promise.all([
 });
 }
 
-loadRoad(scene);
+
 
 let occ2 = [  [0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0, 0, 0], 
@@ -1144,6 +1182,13 @@ document.addEventListener('keydown', switchPattern);
 
 startTrafficSignals();
 
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+window.addEventListener('resize', onWindowResize, false);
+onWindowResize();
 
 function animateCloud() {
     clouds.forEach(cloud => {

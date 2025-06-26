@@ -29,12 +29,12 @@ The project calculates traffic density using real-time Google Maps data, accesse
 ### 2. Access the Project Locally
 To run the project on your local machine:
 1. Clone the repository:  
-```bash
-   git clone https://github.com/suchirmv-1524/Traffic-Simulation-and-Congestion-Control
-```
+   ```bash
+   git clone https://github.com/suchirmv-1524/TrafficSync
+    ```
 2. Navigate to the project directory:
  ```bash
- cd Traffic-Simulation-and-Congestion-Control
+ cd TrafficSync
 ```
 3. Install the dependencies:
 ```bash
@@ -67,8 +67,6 @@ Traffic density is set to high by default, and the scene simulates the maximum n
 ---
 
 ## Authors
-- Srivishnu Gade
-GitHub: @SrivishnuGade
 - Suchir M Velpanur
 Github : @suchirmv-1524
 
